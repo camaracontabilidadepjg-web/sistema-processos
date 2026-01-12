@@ -5,10 +5,13 @@ import json
 
 SCOPES = ["https://www.googleapis.com/auth/drive.file"]
 
-# Lê o JSON COMPLETO da variável de ambiente
-client_secret_info = json.loads(
-    os.environ["GOOGLE_CLIENT_SECRET"]
-)
+# --- VALIDA VARIÁVEL DE AMBIENTE ---
+if "GOOGLE_CLIENT_SECRET" not in os.environ:
+    raise RuntimeError(
+        "Variável de ambiente GOOGLE_CLIENT_SECRET não configurada no Render"
+    )
+
+client_secret_info = json.loads(os.environ["GOOGLE_CLIENT_SECRET"])
 
 
 def iniciar_oauth():

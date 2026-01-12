@@ -1,11 +1,13 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from auth import iniciar_oauth, finalizar_oauth
+from werkzeug.middleware.proxy_fix import ProxyFix
 import drive
 from datetime import datetime
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
-app.secret_key = os.environ.get("SECRET_KEY", "chave-super-secreta")
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+app.config["PREFERRED_URL_SCHEME"] = "https"
 
 
 @app.route("/")

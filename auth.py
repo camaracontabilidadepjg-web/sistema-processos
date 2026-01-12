@@ -1,20 +1,19 @@
 from flask import session, redirect, url_for, request, flash
 from google_auth_oauthlib.flow import Flow
 import os
+import json
 
 SCOPES = ["https://www.googleapis.com/auth/drive.file"]
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-CLIENT_SECRET_FILE = os.environ.get(
-    "GOOGLE_CLIENT_SECRET_FILE",
-    os.path.join(BASE_DIR, "client_secret.json")
+# Lê o JSON COMPLETO da variável de ambiente
+client_secret_info = json.loads(
+    os.environ["GOOGLE_CLIENT_SECRET"]
 )
 
 
 def iniciar_oauth():
-    flow = Flow.from_client_secrets_file(
-        CLIENT_SECRET_FILE,
+    flow = Flow.from_client_config(
+        client_secret_info,
         scopes=SCOPES,
         redirect_uri=url_for("oauth_callback", _external=True)
     )
@@ -34,8 +33,8 @@ def finalizar_oauth():
         flash("⚠️ Estado da autenticação não encontrado. Tente novamente.", "danger")
         return redirect(url_for("login"))
 
-    flow = Flow.from_client_secrets_file(
-        CLIENT_SECRET_FILE,
+    flow = Flow.from_client_config(
+        client_secret_info,
         scopes=SCOPES,
         state=session["state"],
         redirect_uri=url_for("oauth_callback", _external=True)

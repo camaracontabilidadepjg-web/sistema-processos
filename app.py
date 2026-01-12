@@ -6,6 +6,14 @@ import drive
 from datetime import datetime
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
+
+# 🔐 SECRET KEY (OBRIGATÓRIA PARA SESSION)
+app.secret_key = os.environ.get(
+    "FLASK_SECRET_KEY",
+    "dev-secret-key-local"
+)
+
+# Corrige HTTPS atrás do proxy do Render
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.config["PREFERRED_URL_SCHEME"] = "https"
 
@@ -16,10 +24,10 @@ def index():
         return redirect(url_for("login"))
 
     processos = drive.listar_processos()
-    # adiciona arquivos a cada processo
     for p in processos:
         p["arquivos"] = drive.listar_arquivos(p["id"])
-    return render_template("index.html", processos=processos, drive=drive)
+
+    return render_template("index.html", processos=processos)
 
 
 @app.route("/login")
@@ -79,4 +87,4 @@ def excluir_todos(pasta_id):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port)

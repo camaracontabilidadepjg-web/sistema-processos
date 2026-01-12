@@ -8,16 +8,20 @@ from googleapiclient.errors import HttpError
 
 def get_drive_service():
     if "credentials" not in session:
-        raise RuntimeError("Usuário não autenticado")
+        raise RuntimeError("Sessão expirada ou usuário não autenticado")
+
     creds = Credentials(**session["credentials"])
-    return build("drive", "v3", credentials=creds)
+    return build("drive", "v3", credentials=creds, cache_discovery=False)
 
 
 def criar_pasta(nome):
     service = get_drive_service()
     try:
         pasta = service.files().create(
-            body={"name": nome, "mimeType": "application/vnd.google-apps.folder"},
+            body={
+                "name": nome,
+                "mimeType": "application/vnd.google-apps.folder"
+            },
             fields="id"
         ).execute()
         return pasta["id"]
@@ -52,11 +56,17 @@ def listar_arquivos(pasta_id):
 
 def upload_arquivo(pasta_id, file):
     service = get_drive_service()
-    media = MediaIoBaseUpload(io.BytesIO(file.read()),
-                              mimetype=file.content_type, resumable=True)
+    media = MediaIoBaseUpload(
+        io.BytesIO(file.read()),
+        mimetype=file.content_type,
+        resumable=True
+    )
     try:
         service.files().create(
-            body={"name": file.filename, "parents": [pasta_id]},
+            body={
+                "name": file.filename,
+                "parents": [pasta_id]
+            },
             media_body=media
         ).execute()
     except HttpError as e:
@@ -74,7 +84,10 @@ def excluir_arquivo(file_id):
 def obter_nome_pasta(pasta_id):
     service = get_drive_service()
     try:
-        file = service.files().get(fileId=pasta_id, fields="name").execute()
+        file = service.files().get(
+            fileId=pasta_id,
+            fields="name"
+        ).execute()
         return file["name"]
     except HttpError as e:
         raise RuntimeError(f"Erro ao obter nome da pasta: {e}")
@@ -83,7 +96,9 @@ def obter_nome_pasta(pasta_id):
 def renomear_pasta(pasta_id, novo_nome):
     service = get_drive_service()
     try:
-        service.files().update(fileId=pasta_id, body={
-            "name": novo_nome}).execute()
+        service.files().update(
+            fileId=pasta_id,
+            body={"name": novo_nome}
+        ).execute()
     except HttpError as e:
         raise RuntimeError(f"Erro ao renomear pasta: {e}")
